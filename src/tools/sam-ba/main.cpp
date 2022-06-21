@@ -13,15 +13,14 @@
 
 #include "sambatool.h"
 
-#include <QCoreApplication>
+#include <QApplication>
 
 int main(int argc, char *argv[])
 {
-	QLoggingCategory::setFilterRules("*.debug=false\n"
+    QLoggingCategory::setFilterRules("*.debug=true\n"
 			"qml.debug=true");
 	qSetMessagePattern("%{message}");
 
-	SambaTool app(argc, argv);
-	QTimer::singleShot(0, &app, &SambaTool::run);
-	return app.exec();
+    SambaTool a(argc, argv);
+    return a.exec();
 }

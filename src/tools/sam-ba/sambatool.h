@@ -15,13 +15,20 @@
 #define SAMBA_TOOL_H
 
 #include "sambaengine.h"
+#include "ui_samba_ui.h"
 #include <QObject>
 #include <QUrl>
 #include <QtQml>
+#include <QMainWindow>
+#include <QtWidgets>
+
+QT_BEGIN_NAMESPACE
+namespace Ui { class SAMBA_UI; }
+QT_END_NAMESPACE
 
 class Metadata;
 
-class SambaTool : public QCoreApplication
+class SambaTool : public QApplication
 {
 	Q_OBJECT
 
@@ -43,13 +50,15 @@ public:
 		ShowAppletCmdHelp  = (1 << 10),
 	};
 
-	explicit SambaTool(int &argc, char **argv);
+    explicit SambaTool(int &argc, char **argv);
 	~SambaTool();
 
 	void run();
+    quint32 parseArguments(const QStringList& arguments);
+
+    Ui::SAMBA_UI ui;
 
 private:
-	quint32 parseArguments(const QStringList& arguments);
 
 	void displayVersion();
 
@@ -73,9 +82,11 @@ private:
 	void displayJsCommandLineCommandsHelp(QObject* obj);
 	QObject* findObject(const QList<QObject*>& objects, const QString& name);
 	bool parseObjectArguments(QObject* object, const QString& cmdline, const QStringList& args, const QString& what);
+    void cerr_msg(const QString& str);
 
 private slots:
 	void onToolError(const QString& message);
+    void ProgramClicked(void);
 
 private:
 	SambaEngine m_engine;
@@ -93,5 +104,7 @@ private:
 	QObject* m_applet;
 	QVariant m_commands;
 };
+
+
 
 #endif // SAMBA_TOOL_H

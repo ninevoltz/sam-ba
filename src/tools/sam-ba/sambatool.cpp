@@ -13,12 +13,19 @@
 
 #include "sambatool.h"
 #include "sambatoolcontext.h"
+#include "ui_samba_ui.h"
 #include <QFile>
+#include <QDir>
 #include <iostream>
 
-static void cerr_msg(const QString& str)
+#ifdef Q_OS_ANDROID
+#include <QtAndroid>
+#include <QtAndroidExtras>
+#endif
+
+void SambaTool::cerr_msg(const QString& str)
 {
-	std::cerr << str.toLocal8Bit().constData() << std::endl;
+    ui.MessageText->setPlainText(QString("%1\n%2").arg(ui.MessageText->toPlainText()).arg(str));
 }
 
 static QStringList callArrayJsFunction(QObject* obj, const QString& functionName)
@@ -76,17 +83,61 @@ static bool callBooleanJsFunction(QObject* obj, const QString& functionName, boo
 	return returnedValue.toBool();
 }
 
+void SambaTool::ProgramClicked(void) {
+    run();
+}
+
 SambaTool::SambaTool(int& argc, char** argv)
-    : QCoreApplication(argc, argv),
+    : QApplication(argc, argv),
       m_engine(this),
       m_traceLevel(3),
       m_port(0),
       m_device(0),
       m_applet(0)
 {
+
+#ifdef Q_OS_ANDROID
+    auto  result = QtAndroid::checkPermission(QString("android.permission.WRITE_EXTERNAL_STORAGE"));
+    if(result == QtAndroid::PermissionResult::Denied){
+        QtAndroid::PermissionResultMap resultHash = QtAndroid::requestPermissionsSync(QStringList({"android.permission.WRITE_EXTERNAL_STORAGE"}));
+        if(resultHash["android.permission.WRITE_EXTERNAL_STORAGE"] == QtAndroid::PermissionResult::Denied)
+            return;
+    }
+    result = QtAndroid::checkPermission(QString("android.permission.READ_EXTERNAL_STORAGE"));
+    if(result == QtAndroid::PermissionResult::Denied){
+        QtAndroid::PermissionResultMap resultHash = QtAndroid::requestPermissionsSync(QStringList({"android.permission.READ_EXTERNAL_STORAGE"}));
+        if(resultHash["android.permission.READ_EXTERNAL_STORAGE"] == QtAndroid::PermissionResult::Denied)
+            return;
+    }
+    void JniMessenger::printFromJava(const QString &message)
+    {
+        QAndroidJniObject javaMessage = QAndroidJniObject::fromString(message);
+        QAndroidJniObject::callStaticMethod<void>("org/qtproject/example/jnimessenger/JniMessenger",
+                                           "printFromJava",
+                                           "(Ljava/lang/String;)V",
+                                            javaMessage.object<jstring>());
+    }
+#endif
+
+    QMainWindow *w = new QMainWindow();
+    QStringList ParamList;
+    const QString downloadsFolder = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    QDir::setCurrent(downloadsFolder);
+
 	setApplicationName("sam-ba");
 	setApplicationVersion(SAMBA_VERSION);
-	m_status = parseArguments(arguments());
+    ui.setupUi(w);
+    w->show();
+    w->setWindowState(Qt::WindowState::WindowActive);
+    ui.MessageText->show();
+    ui.programButton->show();
+    ui.MessageText->setLineWrapMode(QTextEdit::NoWrap);
+    ui.MessageText->ensureCursorVisible();
+    connect(ui.programButton, SIGNAL(clicked()), this, SLOT(ProgramClicked()));
+
+    ParamList << "-t 5" << "-xinternalflash-usb.qml";
+
+    m_status = parseArguments(ParamList);
 }
 
 SambaTool::~SambaTool()
@@ -592,20 +643,20 @@ quint32 SambaTool::parseArguments(const QStringList& arguments)
 	}
 
 	if (parser.isSet(executeOption)) {
-		QFileInfo userScript(parser.value(executeOption));
-		if (!userScript.exists()) {
+        QFileInfo userScript(parser.value(executeOption));
+        if (!userScript.exists()) {
 			cerr_msg(QString("Error: User script '%1' not found.").arg(userScript.fileName()));
 			return Failed;
-		}
+        }
 		m_userScript = QUrl::fromLocalFile(userScript.absoluteFilePath());
 		m_userScriptArguments = parser.positionalArguments();
 
 		if (parser.isSet(workDirOption)) {
 			QDir workDir(parser.value(workDirOption));
-			if (!workDir.exists()) {
+            if (!workDir.exists()) {
 				cerr_msg(QString("Error: Working directory '%1' not found.").arg(workDir.absolutePath()));
 				return Failed;
-			}
+            }
 			m_workingDir = workDir.absolutePath() + QString("/");
 		}
 

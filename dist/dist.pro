@@ -2,7 +2,7 @@ TEMPLATE = subdirs
 
 # map Qt version to ICU versions
 equals(QT_MAJOR_VERSION, 5) {
-	equals(QT_MINOR_VERSION, 9): ICU_VERSION = 56
+	equals(QT_MINOR_VERSION, 15): ICU_VERSION = 56
 }
 isEmpty(ICU_VERSION) {
 	error(Unknown QT version)
@@ -23,7 +23,7 @@ qtconf.files = qt.conf
 INSTALLS += qtconf
 
 # copy Qt libs
-unix:{
+unix:!android:{
 	qtlibs.path = /lib
 	qtlibs.files = \
 		$$[QT_INSTALL_LIBS]/libQt5Core.so.5 \
@@ -75,9 +75,45 @@ else:win32:{
 	otherlibs.CONFIG += no_check_exist
 	INSTALLS += otherlibs
 
-	qmlmodules.path = /qml
-	qmlmodules.files = $$[QT_INSTALL_QML]/QtQuick.2
-	INSTALLS += qmlmodules
+        qmlmodules.path = qml
+        qmlmodules.files = \
+            $$[QT_INSTALL_QML]/QtQuick.2 \
+            $$PWD/qml/*
+
+        INSTALLS += qmlmodules
+
+        metadata.path = metadata
+        metadata.files = $$PWD/metadata/*
+
+        INSTALLS += metadata
+}
+
+unix:android:{
+        qtlibs.path = /lib
+        qtlibs.files = \
+                $$[QT_INSTALL_LIBS]/libQt5Core_$$ANDROID_ABIS.so \
+                $$[QT_INSTALL_LIBS]/libQt5Gui_$$ANDROID_ABIS.so \
+                $$[QT_INSTALL_LIBS]/libQt5Network_$$ANDROID_ABIS.so \
+                $$[QT_INSTALL_LIBS]/libQt5Qml_$$ANDROID_ABIS.so \
+                $$[QT_INSTALL_LIBS]/libQt5Quick_$$ANDROID_ABIS.so \
+                $$[QT_INSTALL_LIBS]/libQt5SerialPort_$$ANDROID_ABIS.so \
+                $$[QT_INSTALL_LIBS]/libQt5QmlModels_$$ANDROID_ABIS.so \
+                $$[QT_INSTALL_LIBS]/libQt5QmlWorkerScript_$$ANDROID_ABIS.so
+
+        INSTALLS += qtlibs
+
+        qmlmodules.path = /assets/qml
+        qmlmodules.files = \
+            $$[QT_INSTALL_QML]/QtQuick.2 \
+            $$[QT_INSTALL_QML]/SAMBA
+
+        INSTALLS += qmlmodules
+
+        metadata.path = /assets/metadata
+        metadata.files = $$PWD/metadata/*
+
+        INSTALLS += metadata
+
 }
 
 # copy multi_sam-ba.py
@@ -85,5 +121,6 @@ script.path = /
 script.files = multi_sam-ba.py
 
 post_script.path = /
-unix:post_script.extra = cd $(INSTALL_ROOT)/; chmod 755 $$script.files
+unix:!android:post_script.extra = cd $(INSTALL_ROOT)/; chmod 755 $$script.files
+
 INSTALLS += script post_script

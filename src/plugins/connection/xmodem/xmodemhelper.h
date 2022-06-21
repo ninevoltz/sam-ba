@@ -5,7 +5,7 @@
 #include <QElapsedTimer>
 #include <QSerialPort>
 
-class XmodemHelper
+class Q_DECL_EXPORT XmodemHelper
 {
 public:
 	XmodemHelper(QSerialPort& serial);
