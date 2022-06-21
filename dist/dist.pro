@@ -89,9 +89,9 @@ else:win32:{
 	otherlibs.CONFIG += no_check_exist
         INSTALLS += platformlibs otherlibs
 
-        qmlmodules.path = qml
+        qmlmodules.path = /qml
         qmlmodules.files = \
-            $$[QT_INSTALL_QML]/QtQuick.2 \
+            $$[QT_INSTALL_LIBS]/../qml/QtQuick.2 \
             $$PWD/qml/*
 
         metadata.path = metadata
