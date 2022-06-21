@@ -66,11 +66,11 @@ else:win32:{
 			$$[QT_INSTALL_LIBS]/../bin/Qt5Gui.dll \
 			$$[QT_INSTALL_LIBS]/../bin/Qt5Network.dll \
 			$$[QT_INSTALL_LIBS]/../bin/Qt5Qml.dll \
-                        $$[QT_INSTALL_LIBS]/../bin/Qt5QmlModelsd.dll \
-                        $$[QT_INSTALL_LIBS]/../bin/Qt5QmlWorkerScriptd.dll \
+                        $$[QT_INSTALL_LIBS]/../bin/Qt5QmlModels.dll \
+                        $$[QT_INSTALL_LIBS]/../bin/Qt5QmlWorkerScript.dll \
 			$$[QT_INSTALL_LIBS]/../bin/Qt5Quick.dll \
                         $$[QT_INSTALL_LIBS]/../bin/Qt5SerialPort.dll \
-                        $$[QT_INSTALL_LIBS]/../bin/Qt5Widgetsd.dll
+                        $$[QT_INSTALL_LIBS]/../bin/Qt5Widgets.dll
 
 	}
 	INSTALLS += qtlibs
