@@ -46,6 +46,7 @@ unix:!android:{
 	INSTALLS += qmlmodules
 }
 else:win32:{
+
 	qtlibs.path = /
 	CONFIG(debug, debug|release):{
 		qtlibs.files = \
@@ -53,8 +54,11 @@ else:win32:{
 			$$[QT_INSTALL_LIBS]/../bin/Qt5Guid.dll \
 			$$[QT_INSTALL_LIBS]/../bin/Qt5Networkd.dll \
 			$$[QT_INSTALL_LIBS]/../bin/Qt5Qmld.dll \
+                        $$[QT_INSTALL_LIBS]/../bin/Qt5QmlModelsd.dll \
+                        $$[QT_INSTALL_LIBS]/../bin/Qt5QmlWorkerScriptd.dll \
 			$$[QT_INSTALL_LIBS]/../bin/Qt5Quickd.dll \
-			$$[QT_INSTALL_LIBS]/../bin/Qt5SerialPortd.dll
+                        $$[QT_INSTALL_LIBS]/../bin/Qt5SerialPortd.dll \
+                        $$[QT_INSTALL_LIBS]/../bin/Qt5Widgetsd.dll
 	}
 	else:{
 		qtlibs.files = \
@@ -62,10 +66,20 @@ else:win32:{
 			$$[QT_INSTALL_LIBS]/../bin/Qt5Gui.dll \
 			$$[QT_INSTALL_LIBS]/../bin/Qt5Network.dll \
 			$$[QT_INSTALL_LIBS]/../bin/Qt5Qml.dll \
+                        $$[QT_INSTALL_LIBS]/../bin/Qt5QmlModelsd.dll \
+                        $$[QT_INSTALL_LIBS]/../bin/Qt5QmlWorkerScriptd.dll \
 			$$[QT_INSTALL_LIBS]/../bin/Qt5Quick.dll \
-			$$[QT_INSTALL_LIBS]/../bin/Qt5SerialPort.dll
+                        $$[QT_INSTALL_LIBS]/../bin/Qt5SerialPort.dll \
+                        $$[QT_INSTALL_LIBS]/../bin/Qt5Widgetsd.dll
+
 	}
 	INSTALLS += qtlibs
+
+        platformlibs.path = /plugins/platforms
+        platformlibs.files = \
+            $$[QT_INSTALL_LIBS]/../plugins/platforms/*.dll
+
+
 
 	otherlibs.path = /
 	otherlibs.files = \
@@ -73,19 +87,17 @@ else:win32:{
 		$$[QT_INSTALL_LIBS]/../bin/libgcc_s_dw2-1.dll \
 		$$[QT_INSTALL_LIBS]/../bin/libstdc++-6.dll \
 	otherlibs.CONFIG += no_check_exist
-	INSTALLS += otherlibs
+        INSTALLS += platformlibs otherlibs
 
         qmlmodules.path = qml
         qmlmodules.files = \
             $$[QT_INSTALL_QML]/QtQuick.2 \
             $$PWD/qml/*
 
-        INSTALLS += qmlmodules
-
         metadata.path = metadata
         metadata.files = $$PWD/metadata/*
 
-        INSTALLS += metadata
+        INSTALLS += target metadata qmlmodules
 }
 
 unix:android:{
@@ -107,12 +119,10 @@ unix:android:{
             $$[QT_INSTALL_QML]/QtQuick.2 \
             $$[QT_INSTALL_QML]/SAMBA
 
-        INSTALLS += qmlmodules
-
         metadata.path = /assets/metadata
         metadata.files = $$PWD/metadata/*
 
-        INSTALLS += metadata
+        INSTALLS += target metadata qmlmodules
 
 }
 

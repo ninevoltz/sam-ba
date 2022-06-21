@@ -11,7 +11,7 @@
  * more details.
  */
 
-import QtQuick 2.3
+import QtQuick 2.15
 import SAMBA 3.2
 
 /* Proxy object to access the 'Script' QML singleton from C++ */
