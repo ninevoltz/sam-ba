@@ -123,10 +123,9 @@ void SambaConnectionSecureHelper::open()
 	}
 
 	QSerialPortInfo info(port());
-	if (!info.isValid())
+    if (!info.isNull())
 	{
-		emit connectionFailed(QString().sprintf("Cannot open invalid port '%s'",
-		                      port().toLocal8Bit().constData()));
+        emit connectionFailed(QString("Cannot open invalid port '%s'").arg(port().toLocal8Bit().constData()));
 		return;
 	}
 
@@ -153,9 +152,7 @@ void SambaConnectionSecureHelper::open()
 	}
 	else
 	{
-		emit connectionFailed(QString().sprintf("Could not open secure port '%s': %s",
-		                      port().toLocal8Bit().constData(),
-		                      m_serial.errorString().toLocal8Bit().constData()));
+        emit connectionFailed(QString("Could not open secure port '%s': %s").arg(port().toLocal8Bit().constData()).arg(m_serial.errorString().toLocal8Bit().constData()));
 	}
 }
 
@@ -287,7 +284,7 @@ bool SambaConnectionSecureHelper::executeWriteCommand(const QString& command, co
 	int timeout = 10000;
 
 	// send command
-	writeCommand(QString().sprintf("%s,0,%x,0,1#", command.toLatin1().constData(), remaining));
+    writeCommand(QString("%s,0,%x,0,1#").arg(command.toLatin1().constData()).arg(remaining));
 	for (;;) {
 		quint32 length;
 		QString verb;
@@ -333,9 +330,7 @@ QByteArray SambaConnectionSecureHelper::executeReadCommand(const QString& comman
 		    IS_ALIGNED(len, SZ_USB_ENDPOINT))
 			len--;
 
-		writeCommand(QString().sprintf("%s,%x,%x,0,0#",
-					       command.toLatin1().constData(),
-					       offset, len));
+        writeCommand(QString("%s,%x,%x,0,0#").arg(command.toLatin1().constData()).arg(offset, len));
 
 		if (command == "RFIL" && !waitForApplet(timeout))
 			return QByteArray();

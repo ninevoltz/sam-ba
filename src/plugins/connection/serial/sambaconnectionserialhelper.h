@@ -19,6 +19,14 @@
 #include <QSerialPort>
 #include <QtQml>
 #include <QtQuick/QQuickItem>
+#include <QObject>
+
+#ifdef Q_OS_ANDROID
+#include <QAndroidJniObject>
+#include <QAndroidJniEnvironment>
+#include <QtAndroid>
+#include "sambajni.h"
+#endif
 
 Q_DECLARE_LOGGING_CATEGORY(sambaLogConnSerial)
 
@@ -64,6 +72,9 @@ public:
 	Q_INVOKABLE bool go(quint32 address);
 	Q_INVOKABLE bool waitForMonitor(int timeout);
 
+private slots:
+    void onMessageFromJava(const QString &message);
+
 signals:
 	void portChanged();
 	void baudRateChanged();
@@ -86,6 +97,8 @@ private:
 	quint32 m_cmdCode;
 	qint32 m_maxChunkSize;
 	QSerialPort m_serial;
+    SambaJni *jniMessenger;
+
 };
 
 class Q_DECL_EXPORT SambaConnectionSerialPlugin : public QQmlExtensionPlugin

@@ -22,6 +22,10 @@
 #include <QMainWindow>
 #include <QtWidgets>
 
+#ifdef Q_OS_ANDROID
+
+#endif
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class SAMBA_UI; }
 QT_END_NAMESPACE
@@ -55,13 +59,12 @@ public:
 
 	void run();
     quint32 parseArguments(const QStringList& arguments);
-
     Ui::SAMBA_UI ui;
+    void cerr_msg(const QString& str);
 
 private:
 
 	void displayVersion();
-
 	void displayPortHelp();
 	bool parsePortOption(const QString& value);
 
@@ -82,7 +85,6 @@ private:
 	void displayJsCommandLineCommandsHelp(QObject* obj);
 	QObject* findObject(const QList<QObject*>& objects, const QString& name);
 	bool parseObjectArguments(QObject* object, const QString& cmdline, const QStringList& args, const QString& what);
-    void cerr_msg(const QString& str);
 
 private slots:
 	void onToolError(const QString& message);
@@ -104,7 +106,5 @@ private:
 	QObject* m_applet;
 	QVariant m_commands;
 };
-
-
 
 #endif // SAMBA_TOOL_H

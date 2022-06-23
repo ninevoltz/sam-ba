@@ -17,6 +17,13 @@
 #include <QStringList>
 #include "xmodemhelper.h"
 
+#ifdef Q_OS_ANDROID
+#include <QAndroidJniObject>
+#include <QAndroidJniEnvironment>
+#include <QtAndroid>
+#include "sambajni.h"
+#endif
+
 #define ATMEL_USB_VID 0x03eb
 #define SAMBA_USB_PID 0x6124
 
@@ -30,6 +37,10 @@ static bool serial_is_at91(const QSerialPortInfo& info)
 			&& info.productIdentifier() == SAMBA_USB_PID;
 }
 
+void SambaConnectionSerialHelper::onMessageFromJava(const QString &message) {
+    qCInfo(sambaLogConnSerial, "Message received from Java '%s'", message.toLocal8Bit().constData());
+}
+
 SambaConnectionSerialHelper::SambaConnectionSerialHelper(QQuickItem* parent)
 	: QQuickItem(parent),
 	  m_port(""),
@@ -38,6 +49,10 @@ SambaConnectionSerialHelper::SambaConnectionSerialHelper(QQuickItem* parent)
 	  m_cmdCode(~0),
 	  m_maxChunkSize(16384)
 {
+    jniMessenger = new SambaJni(parent);
+    connect(jniMessenger, SIGNAL(messageFromJava(const QString &)), this, SLOT(onMessageFromJava(const QString &)));
+    jniMessenger->printFromJava(QString("Qt on Android SUCKS."));
+
 }
 
 SambaConnectionSerialHelper::~SambaConnectionSerialHelper()
@@ -131,11 +146,9 @@ void SambaConnectionSerialHelper::open(qint32 maxChunkSize)
 	}
 
 	QSerialPortInfo info(port());
-	if (!info.isValid())
+    if (!info.isNull())
 	{
-		emit connectionFailed(
-				QString().sprintf("Cannot open invalid port '%s'",
-					port().toLocal8Bit().constData()));
+        emit connectionFailed(QString("Cannot open invalid port '%s'").arg(port().toLocal8Bit().constData()));
 		return;
 	}
 
@@ -172,25 +185,19 @@ void SambaConnectionSerialHelper::open(qint32 maxChunkSize)
 			if (resp == "CACK,ffffffff,00000000#")
 			{
 				emit connectionFailed(
-						QString().sprintf(
-							"Cannot communicate with monitor on port '%s' because chip is in secure mode",
-							port().toLocal8Bit().constData()));
+                        QString("Cannot communicate with monitor on port '%s' because chip is in secure mode").arg(port().toLocal8Bit().constData()));
 			}
 			else
 			{
 				emit connectionFailed(
-						QString().sprintf(
-							"Could not switch monitor on port '%s' to binary mode",
-							port().toLocal8Bit().constData()));
+                        QString("Could not switch monitor on port '%s' to binary mode").arg(port().toLocal8Bit().constData()));
 			}
 		}
 	}
 	else
 	{
 		emit connectionFailed(
-				QString().sprintf("Could not open serial port '%s': %s",
-					port().toLocal8Bit().constData(),
-					m_serial.errorString().toLocal8Bit().constData()));
+                QString("Could not open serial port '%s': %s").arg(port().toLocal8Bit().constData()).arg(m_serial.errorString().toLocal8Bit().constData()));
 	}
 }
 
@@ -254,7 +261,7 @@ QVariant SambaConnectionSerialHelper::readu8(quint32 address, int timeout)
 	if (!m_serial.isOpen())
 		return QVariant();
 
-	writeSerial(QString().sprintf("o%x,#", address));
+    writeSerial(QString("o%x,#").arg(address));
 
 	QByteArray resp = readSerial(1, timeout);
 	quint8 value = (quint8)resp[0];
@@ -266,7 +273,7 @@ QVariant SambaConnectionSerialHelper::readu16(quint32 address, int timeout)
 	if (!m_serial.isOpen())
 		return QVariant();
 
-	writeSerial(QString().sprintf("h%x,#", address));
+    writeSerial(QString("h%x,#").arg(address));
 
 	QByteArray resp = readSerial(2, timeout);
 	quint16 value = (((quint8)resp[1]) << 8) + ((quint8)resp[0]);
@@ -278,7 +285,7 @@ QVariant SambaConnectionSerialHelper::readu32(quint32 address, int timeout)
 	if (!m_serial.isOpen())
 		return false;
 
-	writeSerial(QString().sprintf("w%x,#", address));
+    writeSerial(QString("w%x,#").arg(address));
 
 	QByteArray resp = readSerial(4, timeout);
 	quint32 value = (((quint8)resp[3]) << 24) + (((quint8)resp[2]) << 16) +
@@ -321,7 +328,7 @@ QByteArray SambaConnectionSerialHelper::read(quint32 address, int length, int ti
 		int chunkSize = length > m_maxChunkSize ? m_maxChunkSize : length;
 		if (m_at91 && (chunkSize & 63) == 0)
 			chunkSize--;
-		writeSerial(QString().sprintf("R%x,%x#", address + offset, chunkSize));
+        writeSerial(QString("R%x,%x#").arg( address + offset).arg(chunkSize));
 		if (m_at91) {
 			data.append(readSerial(chunkSize, remaining));
 		} else {
@@ -342,7 +349,7 @@ bool SambaConnectionSerialHelper::writeu8(quint32 address, quint8 data)
 	if (!m_serial.isOpen())
 		return false;
 
-	writeSerial(QString().sprintf("O%x,%02x#", address, data));
+    writeSerial(QString("O%x,%02x#").arg(address).arg(data));
 	return true;
 }
 
@@ -351,7 +358,7 @@ bool SambaConnectionSerialHelper::writeu16(quint32 address, quint16 data)
 	if (!m_serial.isOpen())
 		return false;
 
-	writeSerial(QString().sprintf("H%x,%04x#", address, data));
+    writeSerial(QString("H%x,%04x#").arg(address).arg(data));
 	return true;
 }
 
@@ -360,7 +367,7 @@ bool SambaConnectionSerialHelper::writeu32(quint32 address, quint32 data)
 	if (!m_serial.isOpen())
 		return false;
 
-	writeSerial(QString().sprintf("W%x,%08x#", address, data));
+    writeSerial(QString("W%x,%08x#").arg(address).arg(data));
 	return true;
 }
 
@@ -374,7 +381,7 @@ bool SambaConnectionSerialHelper::write(quint32 address, const QByteArray& data)
 	while (length > 0)
 	{
 		int chunkSize = length > m_maxChunkSize ? m_maxChunkSize : length;
-		writeSerial(QString().sprintf("S%x,%x#", address + offset, chunkSize));
+        writeSerial(QString("S%x,%x#").arg(address + offset).arg(chunkSize));
 		if (m_at91) {
 			writeSerial(data.mid(offset, chunkSize));
 		} else {
@@ -394,7 +401,7 @@ bool SambaConnectionSerialHelper::go(quint32 address)
 	if (!m_serial.isOpen())
 		return false;
 
-	writeSerial(QString().sprintf("G%x#", address));
+    writeSerial(QString("G%x#").arg(address));
 
 	return true;
 }

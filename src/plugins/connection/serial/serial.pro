@@ -2,12 +2,23 @@ TEMPLATE = lib
 CONFIG += plugin
 QT += core serialport qml quick
 
+unix:android:{
+QT += androidextras
+}
+
 TARGET = samba_conn_serial
 
 DESTPATH = /qml/SAMBA/Connection/Serial
 
 SOURCES += sambaconnectionserialhelper.cpp
 HEADERS += sambaconnectionserialhelper.h
+
+unix:android:{
+SOURCES += \
+    sambajni.cpp
+HEADERS += \
+    sambajni.h
+}
 
 INCLUDEPATH += $$PWD/../xmodem
 DEPENDPATH += $$PWD/../xmodem
@@ -39,3 +50,18 @@ INSTALLS *= target qml metadata
 OTHER_FILES += \
     $$qml.files \
     module_samba_connection_serial.qdoc
+
+DISTFILES += \
+    usb-serial-for-android/CdcAcmSerialDriver.java \
+    usb-serial-for-android/Ch34xSerialDriver.java \
+    usb-serial-for-android/CommonUsbSerialPort.java \
+    usb-serial-for-android/FtdiSerialDriver.java \
+    usb-serial-for-android/MonotonicClock.java \
+    usb-serial-for-android/ProbeTable.java \
+    usb-serial-for-android/ProlificSerialDriver.java \
+    usb-serial-for-android/SerialInputOutputManager.java \
+    usb-serial-for-android/SerialTimeoutException.java \
+    usb-serial-for-android/UsbId.java \
+    usb-serial-for-android/UsbSerialDriver.java \
+    usb-serial-for-android/UsbSerialPort.java \
+    usb-serial-for-android/UsbSerialProber.java

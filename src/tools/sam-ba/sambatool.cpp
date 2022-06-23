@@ -25,7 +25,7 @@
 
 void SambaTool::cerr_msg(const QString& str)
 {
-    ui.MessageText->setPlainText(QString("%1\n%2").arg(ui.MessageText->toPlainText()).arg(str));
+    ui.MessageText->setPlainText(QString("%1\n%2").arg(ui.MessageText->toPlainText(), str));
 }
 
 static QStringList callArrayJsFunction(QObject* obj, const QString& functionName)
@@ -109,21 +109,12 @@ SambaTool::SambaTool(int& argc, char** argv)
         if(resultHash["android.permission.READ_EXTERNAL_STORAGE"] == QtAndroid::PermissionResult::Denied)
             return;
     }
-    void JniMessenger::printFromJava(const QString &message)
-    {
-        QAndroidJniObject javaMessage = QAndroidJniObject::fromString(message);
-        QAndroidJniObject::callStaticMethod<void>("org/qtproject/example/jnimessenger/JniMessenger",
-                                           "printFromJava",
-                                           "(Ljava/lang/String;)V",
-                                            javaMessage.object<jstring>());
-    }
 #endif
 
     QMainWindow *w = new QMainWindow();
     QStringList ParamList;
     const QString downloadsFolder = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
     QDir::setCurrent(downloadsFolder);
-
 	setApplicationName("sam-ba");
 	setApplicationVersion(SAMBA_VERSION);
     ui.setupUi(w);
@@ -381,7 +372,7 @@ bool SambaTool::parseAppletOption(const QString& value)
 
 void SambaTool::run()
 {
-	int returnCode = 0;
+//	int returnCode = 0;
 
 	if (m_status & Failed) {
 		exit(-1);
@@ -480,9 +471,9 @@ void SambaTool::run()
 			delete obj;
 	}
 
-	returnCode = scriptContext->property("returnCode").toInt();
+//	returnCode = scriptContext->property("returnCode").toInt();
 
-	exit((m_status & Failed) ? -1 : returnCode);
+    //exit((m_status & Failed) ? -1 : returnCode);
 }
 
 void SambaTool::onToolError(const QString& message)
