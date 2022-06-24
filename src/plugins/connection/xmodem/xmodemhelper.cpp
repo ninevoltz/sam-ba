@@ -11,7 +11,11 @@
 #define XMODEM_DATALEN     128
 #define XMODEM_MAX_RETRIES 100
 
+#ifdef Q_OS_ANDROID
+XmodemHelper::XmodemHelper(SambaJni* serial)
+#else
 XmodemHelper::XmodemHelper(QSerialPort& serial)
+#endif
     : m_serial(serial)
 {
 
@@ -46,10 +50,10 @@ bool XmodemHelper::readData(uint8_t* data, int length)
 			if (remaining < 0)
 				return false;
 		}
-		m_serial.waitForReadyRead(10);
-		int available = (int)m_serial.bytesAvailable();
+        m_serial->waitForReadyRead(10);
+        int available = (int)m_serial->bytesAvailable();
 		if (available > 0)
-			available = m_serial.read((char*)data, length);
+            available = m_serial->read((char*)data, length);
 		data += available;
 		length -= available;
 		total += available;
@@ -67,9 +71,9 @@ bool XmodemHelper::readByte(uint8_t* data)
 	while (1) {
 		if (timer.elapsed() > 500)
 			return false;
-		m_serial.waitForReadyRead(10);
-		int available = (int)m_serial.bytesAvailable();
-		if (available > 0 && m_serial.read(&b, 1) == 1) {
+        m_serial->waitForReadyRead(10);
+        int available = (int)m_serial->bytesAvailable();
+        if (available > 0 && m_serial->read(&b, 1) == 1) {
 			if (data)
 				*data = *(uint8_t*)&b;
 			break;
@@ -81,8 +85,8 @@ bool XmodemHelper::readByte(uint8_t* data)
 
 bool XmodemHelper::writeData(uint8_t* data, int length)
 {
-	if (m_serial.write((char*)data, length)) {
-		m_serial.waitForBytesWritten(256);
+    if (m_serial->write((char*)data, length)) {
+        m_serial->waitForBytesWritten(256);
 		return true;
 	}
 	return false;
@@ -90,8 +94,8 @@ bool XmodemHelper::writeData(uint8_t* data, int length)
 
 bool XmodemHelper::writeByte(uint8_t data)
 {
-	if (m_serial.putChar(*(char*)&data)) {
-		m_serial.waitForBytesWritten(20);
+    if (m_serial->putChar(*(char*)&data)) {
+        m_serial->waitForBytesWritten(20);
 		return true;
 	}
 	return false;
@@ -167,7 +171,7 @@ QByteArray XmodemHelper::receive(int length)
 	/* Continuously send 'C' until sender responds. */
 	for (retries = 0; retries < XMODEM_MAX_RETRIES; retries++) {
 		writeByte('C');
-		if (m_serial.waitForReadyRead(500))
+        if (m_serial->waitForReadyRead(500))
 			break;
 	}
 	if (retries == XMODEM_MAX_RETRIES)

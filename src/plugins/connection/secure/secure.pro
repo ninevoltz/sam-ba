@@ -2,6 +2,10 @@ TEMPLATE = lib
 CONFIG += plugin
 QT += core serialport qml quick
 
+unix:android:{
+QT += androidextras
+}
+
 TARGET = samba_conn_secure
 
 DESTPATH = /qml/SAMBA/Connection/Secure
@@ -15,7 +19,11 @@ DEPENDPATH += $$PWD/../xmodem
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../xmodem/release -lsamba_conn_xmodem
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../xmodem/debug -lsamba_conn_xmodem
 else:unix:!android: LIBS += -L$$OUT_PWD/../xmodem -lsamba_conn_xmodem
-else:unix:android: LIBS += -L$$OUT_PWD/../xmodem -lsamba_conn_xmodem_$$ANDROID_ABIS
+unix:android:{
+LIBS += \
+    -L$$OUT_PWD/../xmodem -lsamba_conn_xmodem_$$ANDROID_ABIS \
+    -L$$OUT_PWD/../sambajni -lsambajni_$$ANDROID_ABIS
+}
 
 # set RPATH on Linux
 unix:!mac:{

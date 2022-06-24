@@ -52,6 +52,11 @@
 #define SAMBAJNI_H
 
 #include <QObject>
+#include <QStringList>
+#include <QAndroidJniObject>
+#include <QAndroidJniEnvironment>
+#include <QAndroidIntent>
+#include <QtAndroid>
 
 class SambaJni : public QObject
 {
@@ -61,16 +66,31 @@ public:
     explicit SambaJni(QObject *parent = nullptr);
     static SambaJni *instance() { return m_instance; }
     Q_INVOKABLE void printFromJava(const QString &message);
-    Q_INVOKABLE void openUSBPort();
-    Q_INVOKABLE void sendUSB();
+    Q_INVOKABLE bool open(int mode);
+    Q_INVOKABLE int write(const char *buffer, int len);
+    Q_INVOKABLE QByteArray read(int len);
+    Q_INVOKABLE int read(const char* buffer, int len);
+    Q_INVOKABLE QStringList availablePorts();
+    Q_INVOKABLE void waitForBytesWritten(int delay);
+    Q_INVOKABLE bool isOpen();
+    Q_INVOKABLE void close();
+    Q_INVOKABLE bool waitForReadyRead(int delay);
+    Q_INVOKABLE int bytesAvailable();
+    Q_INVOKABLE bool putChar(char c);
+    Q_INVOKABLE QString errorString();
 
 signals:
-    void stringFromJava(const QString &message);
+    void messageFromJava(const QString &message);
 
 public slots:
 
 private:
     static SambaJni *m_instance;
+    QAndroidJniObject *javaClass;
+    QAndroidJniEnvironment env;
+    QAndroidJniObject activity;
+    QAndroidJniObject context;
+    bool connected;
 };
 
 #endif // SAMBAJNI_H

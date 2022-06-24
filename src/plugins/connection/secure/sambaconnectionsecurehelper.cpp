@@ -134,25 +134,27 @@ void SambaConnectionSecureHelper::open()
 	QObject &device = *qvariant_cast<QObject *>(parentItem()->property("device"));
 	m_usb_zlp_quirk = device.property("usb_zlp_quirk").toBool();
 
-	m_serial.setPort(info);
+#ifndef Q_OS_ANDROID
+    m_serial->setPort(info);
 	if (m_baudRate <= 0)
 		m_baudRate = m_at91 ? 921600 : 115200;
-	m_serial.setBaudRate(m_baudRate);
-	m_serial.setDataBits(QSerialPort::Data8);
-	m_serial.setParity(QSerialPort::NoParity);
-	m_serial.setStopBits(QSerialPort::OneStop);
-	m_serial.setFlowControl(QSerialPort::NoFlowControl);
+    m_serial->setBaudRate(m_baudRate);
+    m_serial->setDataBits(QSerialPort::Data8);
+    m_serial->setParity(QSerialPort::NoParity);
+    m_serial->setStopBits(QSerialPort::OneStop);
+    m_serial->setFlowControl(QSerialPort::NoFlowControl);
+#endif
 
 	qCInfo(m_sambaLogConnSecure, "Opening secure port '%s'",
 			port().toLocal8Bit().constData());
 
-	if (m_serial.open(QIODevice::ReadWrite))
+    if (m_serial->open(QIODevice::ReadWrite))
 	{
 		emit connectionOpened(m_at91);
 	}
 	else
 	{
-        emit connectionFailed(QString("Could not open secure port '%s': %s").arg(port().toLocal8Bit().constData()).arg(m_serial.errorString().toLocal8Bit().constData()));
+        emit connectionFailed(QString("Could not open secure port '%s': %s").arg(port().toLocal8Bit().constData()).arg(m_serial->errorString().toLocal8Bit().constData()));
 	}
 }
 
@@ -161,14 +163,14 @@ void SambaConnectionSecureHelper::writeCommand(const QString &str)
 	qCDebug(m_sambaLogConnSecure).noquote().nospace() << "SECURE<<" << str;
 
 	QByteArray data = str.toLocal8Bit();
-	m_serial.write(data.constData(), data.length());
-	m_serial.waitForBytesWritten(10);
+    m_serial->write(data.constData(), data.length());
+    m_serial->waitForBytesWritten(10);
 }
 
 void SambaConnectionSecureHelper::writeSerial(const QByteArray &data)
 {
-	m_serial.write(data.constData(), data.length());
-	m_serial.waitForBytesWritten(10);
+    m_serial->write(data.constData(), data.length());
+    m_serial->waitForBytesWritten(10);
 }
 
 QByteArray SambaConnectionSecureHelper::readSerial(int len, int timeout)
@@ -193,10 +195,10 @@ QByteArray SambaConnectionSecureHelper::readSerial(int len, int timeout)
 				break;
 			}
 		}
-		m_serial.waitForReadyRead(10);
-		int available = m_serial.bytesAvailable();
+        m_serial->waitForReadyRead(10);
+        int available = m_serial->bytesAvailable();
 		if (available > 0)
-			resp.append(m_serial.read(qMin(available, len - resp.length())));
+            resp.append(m_serial->read(qMin(available, len - resp.length())));
 	} while (resp.length() < len);
 
 	return resp;
@@ -204,9 +206,9 @@ QByteArray SambaConnectionSecureHelper::readSerial(int len, int timeout)
 
 void SambaConnectionSecureHelper::close()
 {
-	if (m_serial.isOpen())
+    if (m_serial->isOpen())
 	{
-		m_serial.close();
+        m_serial->close();
 		emit connectionClosed();
 	}
 }

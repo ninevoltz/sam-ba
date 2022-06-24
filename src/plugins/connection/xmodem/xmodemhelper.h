@@ -5,10 +5,19 @@
 #include <QElapsedTimer>
 #include <QSerialPort>
 
+#ifdef Q_OS_ANDROID
+#include "../sambajni/sambajni.h"
+#endif
+
 class Q_DECL_EXPORT XmodemHelper
 {
 public:
-	XmodemHelper(QSerialPort& serial);
+
+#ifdef Q_OS_ANDROID
+    XmodemHelper(SambaJni* serial);
+#else
+    XmodemHelper(QSerialPort& serial);
+#endif
 
 	QByteArray receive(int length);
 	bool send(const QByteArray &data);
@@ -23,7 +32,12 @@ private:
 	QByteArray getPacket(int length, uint8_t seqno);
 
 private:
-	QSerialPort& m_serial;
+#ifdef Q_OS_ANDROID
+    SambaJni *m_serial;
+#else
+    QSerialPort *m_serial;
+#endif
+
 };
 
 #endif // XMODEMHELPER_H

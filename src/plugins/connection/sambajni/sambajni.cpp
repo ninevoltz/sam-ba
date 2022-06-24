@@ -50,37 +50,87 @@
 
 #include "sambajni.h"
 
-#include <QAndroidJniObject>
-#include <QAndroidJniEnvironment>
-#include <QtAndroid>
-
 SambaJni *SambaJni::m_instance = nullptr;
 
-static void callFromJava(JNIEnv *env, jobject /*thiz*/, jstring value)
-{
+static void callFromJava(JNIEnv *env, jobject /*thiz*/, jstring value) {
     emit SambaJni::instance()->messageFromJava(env->GetStringUTFChars(value, nullptr));
 }
 
-SambaJni::SambaJni(QObject *parent) : QObject(parent)
-{
+SambaJni::SambaJni(QObject *parent) : QObject(parent) {
     m_instance = this;
 
     JNINativeMethod methods[] {{"callFromJava", "(Ljava/lang/String;)V", reinterpret_cast<void *>(callFromJava)}};
-    QAndroidJniObject javaClass("com/hoho/android/usbserial/jni/SambaJni");
 
-    QAndroidJniEnvironment env;
-    jclass objectClass = env->GetObjectClass(javaClass.object<jobject>());
-    env->RegisterNatives(objectClass,
-                         methods,
-                         sizeof(methods) / sizeof(methods[0]));
+    activity = QtAndroid::androidActivity();
+    context = activity.callObjectMethod("getApplicationContext", "()Landroid/content/Context;");
+
+    javaClass = new QAndroidJniObject("com/hoho/android/usbserial/jni/SambaJni");
+
+    jclass objectClass = env->GetObjectClass(javaClass->object<jobject>());
+    env->RegisterNatives(objectClass, methods, sizeof(methods) / sizeof(methods[0]));
     env->DeleteLocalRef(objectClass);
 }
 
-void SambaJni::printFromJava(const QString &message)
-{
+void SambaJni::printFromJava(const QString &message) {
     QAndroidJniObject javaMessage = QAndroidJniObject::fromString(message);
-    QAndroidJniObject::callStaticMethod<void>("com/hoho/android/usbserial/jni/SambaJni",
-                                       "printFromJava",
-                                       "(Ljava/lang/String;)V",
-                                        javaMessage.object<jstring>());
+    javaClass->callMethod<void>("printFromJava", "(Ljava/lang/String;)V", javaMessage.object<jstring>());
+}
+
+bool SambaJni::open(int mode) {
+    javaClass->callMethod<void>("connect", "(Landroid/content/Context;)V", context.object());
+    connected = true;
+    return true;
+}
+
+int SambaJni::read(const char* buffer, int len) {
+    javaClass->callMethod<void>("read", "([B)I", buffer);
+}
+
+QByteArray SambaJni::read(int len) {
+    QByteArray buffer;
+    buffer.resize(len);
+    char jbuff[len];
+    javaClass->callMethod<void>("read", "([B)I", jbuff);
+    for (int i = 0; i < len; i++) {
+        buffer[i] = jbuff[i];
+    }
+}
+
+int SambaJni::write(const char *buffer, int len) {
+    javaClass->callMethod<void>("write", "([B,I)V", buffer, len);
+    return len;
+}
+
+bool SambaJni::putChar(char c) {
+    javaClass->callMethod<void>("write", "([B,I)V", c, 1);
+    return true;
+}
+
+void SambaJni::close(void) {
+    javaClass->callMethod<void>("disconnect");
+    connected = false;
+}
+
+void SambaJni::waitForBytesWritten(int delay){
+
+}
+
+bool SambaJni::waitForReadyRead(int delay){
+
+}
+
+int SambaJni::bytesAvailable(){
+
+}
+
+bool SambaJni::isOpen() {
+    return connected;
+}
+
+QStringList SambaJni::availablePorts(void) {
+
+}
+
+QString SambaJni::errorString(){
+
 }

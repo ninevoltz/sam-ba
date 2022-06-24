@@ -25,7 +25,7 @@
 #include <QAndroidJniObject>
 #include <QAndroidJniEnvironment>
 #include <QtAndroid>
-#include "sambajni.h"
+#include "../sambajni/sambajni.h"
 #endif
 
 Q_DECLARE_LOGGING_CATEGORY(sambaLogConnSerial)
@@ -96,8 +96,12 @@ private:
 	quint32 m_mailboxAddr;
 	quint32 m_cmdCode;
 	qint32 m_maxChunkSize;
-	QSerialPort m_serial;
-    SambaJni *jniMessenger;
+#ifdef Q_OS_ANDROID
+    SambaJni *m_serial;
+#else
+    QSerialPort *m_serial;
+#endif
+
 
 };
 

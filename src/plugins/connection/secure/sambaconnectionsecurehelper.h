@@ -20,6 +20,10 @@
 #include <QtQml>
 #include <QtQuick/QQuickItem>
 
+#ifdef Q_OS_ANDROID
+#include "../sambajni/sambajni.h"
+#endif
+
 class SecureMonitorReply;
 
 class Q_DECL_EXPORT SambaConnectionSecureHelper : public QQuickItem
@@ -78,7 +82,11 @@ private:
 	QString m_port;
 	qint32 m_baudRate;
 	qint32 m_verboseLevel;
-	QSerialPort m_serial;
+#ifdef Q_OS_ANDROID
+    SambaJni *m_serial;
+#else
+    QSerialPort *m_serial;
+#endif
 	qint32 m_status;
 	QLoggingCategory m_sambaLogConnSecure;
 };
